@@ -1,13 +1,12 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow, session, shell } = require('electron')
+const { app, BrowserWindow, session, shell, globalShortcut } = require('electron')
 const path = require('path')
+const { defaultCipherList } = require('constants')
 
 
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 1920,
-    height: 1080,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js')
     }
@@ -17,7 +16,7 @@ function createWindow() {
   // Remove menu for cleaner look and load website
   mainWindow.removeMenu()
   mainWindow.loadURL('https://play.geforcenow.com/')
-
+  mainWindow.maximize()
 
 
   // Open the DevTools.
@@ -44,10 +43,12 @@ app.whenReady().then(() => {
   // Allows you to see where popups are going to
   app.on('web-contents-created', (webContentsCreatedEvent, contents) => {
     contents.on('will-navigate', function (e, reqUrl) {
-      console.log(`Popup is navigating to: ${reqUrl}`);
-    });
+      console.log(`Popup is navigating to: ${reqUrl}`)
+    })
 
-  });
+  })
+
+  //globalShortcut.register('Esc', () => {})
 
 })
 
@@ -60,8 +61,8 @@ const wsites = {
 function usrset() {
   session.defaultSession.webRequest.onBeforeSendHeaders((wsites, callback) => {
     wsites.requestHeaders['User-Agent'] = 'Mozilla/5.0 (X11; CrOS x86_64 13310.59.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.84 Safari/537.36';
-    callback({ cancel: false, requestHeaders: wsites.requestHeaders });
-  });
+    callback({ cancel: false, requestHeaders: wsites.requestHeaders })
+  })
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -70,6 +71,15 @@ function usrset() {
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
 })
+
+// Set all windows to have no menu
+app.on('browser-window-created', function (e, window) {
+  window.setMenu(null)
+  window.setAlwaysOnTop(true, 'pop-up-menu')
+})
+
+
+
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
